@@ -75,7 +75,13 @@ def bb9_row_f(availability_k=BB9_AVAILABILITY, demo=True):
 
 def to_meta_arg_parser():
     description = 'BB9 To Meta takes a BB9 CSV download and produces a CSV file full of meta information.'
-    parser = default_arg_parser(description)
+    parser = default_arg_parser(
+                    description=description,
+                    file0='input',
+                    file1='output',
+                    dialect0='input',
+                    dialect1='output',
+                )
     return parser
 
 def to_meta_g(fieldnames):
@@ -139,10 +145,16 @@ def to_meta_program():
 
 def to_csv_arg_parser():
     description = 'BB9 To CSV takes a BB9 CSV file and produces a CSV file stripped of the meta information in the columns.'
-    parser = default_arg_parser(description)
+    parser = default_arg_parser(
+                    description=description,
+                    file0='input',
+                    file1='output',
+                    dialect0='input',
+                    dialect1='output',
+                )
     return parser
 
-def to_csv_g(row_g, fieldnames):
+def to_csv_d(row_g, fieldnames):
 
     fn02fn1 = {}
     parsed  = []
@@ -178,14 +190,14 @@ def to_csv_program():
         reader_d = reader_make(
                         fname=args.file0,
                         dialect=args.dialect0,
-                        headless=False, # FIXME
+                        headless=False,
                     )
 
         dialect0    = reader_d['dialect']
         fieldnames0 = reader_d['fieldnames']
         reader_g    = reader_d['reader']
 
-        filter_d = to_csv_g(
+        filter_d = to_csv_d(
                             row_g=reader_g,
                             fieldnames=fieldnames0,
                         )
@@ -204,6 +216,91 @@ def to_csv_program():
                         dialect=dialect1,
                         headless=False,
                         fieldnames=fieldnames1,
+                    )
+
+        writer_f(filter_g)
+                        
+
+    except Exception as exc:
+
+        m = traceback.format_exc()
+        parser.error(m)
+        
+
+
+
+def meta_join_arg_parser():
+    description = 'BB9 Meta Join takes a CSV file BB9 Meta file and produces a CSV file with the column metadata re-inserted.'
+    parser = default_arg_parser(
+                    description=description,
+                    file0='input',
+                    file1='input',
+                    file2='output',
+                    dialect0='input',
+                    dialect1='input',
+                    dialect2='output',
+                )
+    return parser
+
+def meta_join_d(row_g, meta_g, fieldnames):
+
+    fn2meta = {m['name']: serialize_BB9_column_name(m) for m in meta_g}
+
+    fieldnames1 = [fn2meta[fn] for fn in fieldnames]
+
+    def g():
+        for row in row_g:
+            yield {fn2meta[k]: v for k, v in row.iteritems()}
+
+    return {'fieldnames': fieldnames1, 'meta_join_g': g()}
+    
+def meta_join_program():
+
+    parser = meta_join_arg_parser()
+
+    args = parser.parse_args()
+
+    try:
+
+        reader0_d = reader_make(
+                        fname=args.file0,
+                        dialect=args.dialect0,
+                        headless=False,
+                    )
+
+        reader1_d = reader_make(
+                        fname=args.file1,
+                        dialect=args.dialect1,
+                        headless=False,
+                    )
+
+        dialect0    = reader0_d['dialect']
+        fieldnames0 = reader0_d['fieldnames']
+        reader0_g   = reader0_d['reader']
+
+        dialect1    = reader1_d['dialect']
+        fieldnames1 = reader1_d['fieldnames']
+        reader1_g   = reader1_d['reader']
+
+        filter_d = meta_join_d(
+                            row_g=reader0_g,
+                            meta_g=reader1_g,
+                            fieldnames=fieldnames0,
+                        )
+
+        filter_g    = filter_d['meta_join_g']
+        fieldnames2 = filter_d['fieldnames']
+
+        dialect2 = args.dialect2
+
+        if dialect2 == 'dialect0':
+            dialect2 = dialect0
+
+        writer_f = writer_make(
+                        fname=args.file2,
+                        dialect=dialect2,
+                        headless=False,
+                        fieldnames=fieldnames2,
                     )
 
         writer_f(filter_g)

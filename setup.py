@@ -11,9 +11,10 @@ setup(
         license='MIT',
         packages=['bb9'],
         install_requires=[
-                'csvu', # For printing human-readable CSV on console
+                'csvu',
             ],
         scripts=[
+                    'bin/bb9-meta-join',
                     'bin/bb9-to-meta',
                     'bin/bb9-to-csv',
                 ],
