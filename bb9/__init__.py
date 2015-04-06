@@ -10,7 +10,7 @@ from csvu import (
 BB9_USERNAME     = 'Username'
 BB9_AVAILABILITY = 'Availability'
 
-BB9_COLUMN_DFA = re.compile(r"(?P<name>[\w\s]+) \[Total Pts:(?P<upto> up to)? (?P<pts>\d+)\] \|(?P<id>\d+)")
+BB9_COLUMN_DFA = re.compile(r"(?P<name>[\w\s-]+) \[Total Pts:(?P<upto> up to)? (?P<pts>\d+)\] \|(?P<id>\d+)")
 
 BB9_META_FIELDNAMES = [
         'name',
@@ -246,11 +246,11 @@ def meta_join_d(row_g, meta_g, fieldnames):
 
     fn2meta = {m['name']: serialize_BB9_column_name(m) for m in meta_g}
 
-    fieldnames1 = [fn2meta[fn] for fn in fieldnames]
+    fieldnames1 = [fn2meta.get(fn, fn) for fn in fieldnames]
 
     def g():
         for row in row_g:
-            yield {fn2meta[k]: v for k, v in row.iteritems()}
+            yield {fn2meta.get(k, k): v for k, v in row.iteritems()}
 
     return {'fieldnames': fieldnames1, 'meta_join_g': g()}
     
