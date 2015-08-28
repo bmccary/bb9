@@ -2,10 +2,10 @@
 import re
 import traceback
 from csvu import (
-        default_arg_parser,
         reader_make,
         writer_make,
     )
+from csvu.cli import default_arg_parser
 
 BB9_USERNAME     = 'Username'
 BB9_AVAILABILITY = 'Availability'
@@ -295,6 +295,8 @@ def meta_join_program():
 
         if dialect2 == 'dialect0':
             dialect2 = dialect0
+        elif dialect2 == 'dialect1':
+            dialect2 = dialect1
 
         writer_f = writer_make(
                         fname=args.file2,
